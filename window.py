@@ -3,41 +3,14 @@ import imgAccess
 from tkinter import filedialog
 from PIL import ImageTk # Needed for tkinter label compatibility
 import imgProc
+from kernelDefaults import kernelDefaults
 
 class Window:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Image Filtration")
         self.root.minsize(800, 600)
-        self.kernelDefaults = {
-            "Gaussian Blur 3x3": [
-                [1, 2, 1],
-                [2, 4, 2],
-                [1, 2, 1]
-            ],
-            "Gaussian Blur 5x5": [
-                [1, 4, 7, 4, 1],
-                [4, 16, 26, 16, 4],
-                [7, 26, 41, 26, 7],
-                [4, 16, 26, 16, 4],
-                [1, 4, 7, 4, 1]
-            ],
-            "Edge Detect 3x3": [
-                [-1, -1, -1],
-                [-1, 8, -1],
-                [-1, -1, -1]
-            ],
-            "Sharpen 3x3": [
-                [0, -1, 0],
-                [-1, 5, -1],
-                [0, -1, 0]
-            ],
-            "Box Blur 3x3": [
-                [1/9]*3,
-                [1/9]*3,
-                [1/9]*3
-            ]
-        }
+        self.kernelDefaults = kernelDefaults
 
         # Create frames for window
         self.frameMain = tk.Frame(self.root)
