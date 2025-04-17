@@ -1,16 +1,15 @@
 import tkinter as tk
-import imgAccess
+import access
 from tkinter import filedialog
 from PIL import ImageTk # Needed for tkinter label compatibility
-import imgProc
-from kernelDefaults import kernelDefaults
+import process
 
 class Window:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Image Filtration")
         self.root.minsize(800, 600)
-        self.kernelDefaults = kernelDefaults
+        self.kernelDefaults = access.loadKernelList()
 
         # Create frames for window
         self.frameMain = tk.Frame(self.root)
@@ -132,8 +131,8 @@ class Window:
     def loadImage(self):
         filepath = filedialog.askopenfilename()
         if filepath:
-            self.image = imgAccess.loadImage(filepath)
-            self.tkImage = imgAccess.prepImageForWindow(self.image)
+            self.image = access.loadImage(filepath)
+            self.tkImage = access.prepImageForWindow(self.image)
             if self.tkImage:
                 self.imageLabel.config(image=self.tkImage, text="")
             else:
@@ -145,9 +144,9 @@ class Window:
             return
 
         kernel = self.readKernel()
-        result = imgProc.applyKernelToImage(self.image, kernel)
+        result = process.applyKernelToImage(self.image, kernel)
 
-        self.tkImage = imgAccess.prepImageForWindow(result)
+        self.tkImage = access.prepImageForWindow(result)
         self.imageLabel.config(image=self.tkImage)
         self.image = result # Store updated version
 
