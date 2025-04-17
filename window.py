@@ -50,9 +50,10 @@ class Window:
         self.kernelSelectedDefault.set("Select Default Kernel")
 
         # Buttons
-        tk.Button(self.frameInput, text="Load Image", command=self.loadImage).grid(row=0, column=0, padx=10, pady=5)
-        tk.Button(self.frameInput, text="Set Kernel Size", command=self.setKernelFields).grid(row=2, column=0, padx=10, pady=5)
-        tk.Button(self.frameInput, text="Apply Filter", command=self.applyKernelToImage).grid(row=0, column=1, padx=10, pady=5)
+        tk.Button(self.frameInput, text="Load Image", command=self.loadImage).grid(row=0, column=0, padx=10, pady=5, sticky="w")
+        tk.Button(self.frameInput, text="Set Kernel Size", command=self.setKernelFields).grid(row=3, column=0, padx=10, pady=5, sticky="w")
+        tk.Button(self.frameInput, text="Apply Filter", command=self.applyKernelToImage).grid(row=0, column=1, padx=10, pady=5, sticky="w")
+        tk.Button(self.frameInput, text="Save Kernel").grid(row=2, column=0, padx=10, pady=5, sticky="w")
 
         # Image preview label
         self.imageLabel = tk.Label(self.frameInput)
@@ -69,7 +70,12 @@ class Window:
 
         # Kernel size entry
         self.kernelSizeEntry = tk.Entry(self.frameInput)
-        self.kernelSizeEntry.grid(row=2, column=1, columnspan=2, padx=10, pady=5)
+        self.kernelSizeEntry.grid(row=3, column=1, columnspan=2, padx=10, pady=5)
+
+        # Kernel name entry
+        self.kernelNameVar = tk.StringVar()
+        self.kernelNameEntry = tk.Entry(self.frameInput, textvariable=self.kernelNameVar)
+        self.kernelNameEntry.grid(row=2, column=1, columnspan=2, padx=10, pady=5)
 
         # Kernel grid frame
         self.frameKernelEntries = tk.Frame(self.frameInput)

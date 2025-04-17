@@ -44,3 +44,25 @@ def loadKernelList():
 
     return kernelDict
 
+
+def saveKernel(name, matrix):
+    # Normalize the name for filesystem use
+    folderName = name.lower().replace(" ", "_")
+    folderPath = Path("./kernel/custom") / folderName
+    filePath = folderPath / "kernel.json"
+
+    # Make sure the folder exists
+    folderPath.mkdir(parents=True, exist_ok=True)
+
+    # Save the kernel
+    kernelData = {
+        "name": name,
+        "matrix": matrix
+    }
+
+    try:
+        with open(filePath, "w") as f:
+            json.dump(kernelData, f, indent=4)
+        print(f"Saved kernel '{name}' to {filePath}")
+    except Exception as e:
+        print(f"Error saving kernel '{name}': {e}")
