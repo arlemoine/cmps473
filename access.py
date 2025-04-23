@@ -1,5 +1,8 @@
 from PIL import Image, ImageTk
 from pathlib import Path
+import tkinter as tk
+from tkinter import filedialog
+from pathlib import Path
 import json
 
 def loadImage(filepath):
@@ -15,7 +18,27 @@ def loadImage(filepath):
         print(f"Error loading image: {e}")
         return None
 
-def prepImageForWindow(image, max_size=(300, 300)):
+def loadKernel():
+    filepath = filedialog.askopenfilename(filetypes=[("JSON Files", "*.json")])
+
+    if not filepath:
+        return None
+
+    try:
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+
+        if "matrix" in data:
+            kernel = data["matrix"]
+            return kernel
+        else:
+            print("Error: No 'matrix' found in the json file.")
+            return None
+    except (json.JSONDecodeError, IOError) as e:
+        print(f"Error loading kernel from file: {e}")
+        return None
+
+def prepImageForWindow(image, max_size=(1000, 1000)):
     """Resize and convert an image for display in tkinter."""
     if image:
         image = image.copy() # Avoid altering the original
@@ -48,7 +71,7 @@ def loadKernelList():
 def saveKernel(name, matrix):
     # Normalize the name for filesystem use
     folderName = name.lower().replace(" ", "_")
-    folderPath = Path("./kernel/custom") / folderName
+    folderPath = Path("./kernel") / folderName
     filePath = folderPath / "kernel.json"
 
     # Make sure the folder exists
