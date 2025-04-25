@@ -65,7 +65,9 @@ def loadKernelList():
         except Exception as e:
             print(f"Failed to load {jsonFile}: {e}")
 
-    return kernelDict
+    sortedKernelDict = dict(sorted(kernelDict.items()))
+
+    return sortedKernelDict
 
 
 def saveKernel(name, matrix):
