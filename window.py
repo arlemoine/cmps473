@@ -11,113 +11,138 @@ class Window:
         self.root.title("Image Filtration")
         self.root.minsize(1200, 1000)
 
+        # Configure grid of root
+        self.root.grid_rowconfigure(1, weight=1) # Row of image panel
+        self.root.grid_columnconfigure(0, weight=1) # Column of image panel
+
+        self.createFrames()
+        
+        # Main variables
         self.kernelList = access.loadKernelList()
         self.kernelMatrixEntries = []
         self.history = [] # List of PIL Images
         self.historyThumbnails = []
-        self.displayedImage = None
+        self.imageThumbnail = None
         self.image = None
 
-        # Create frames
-        self.frameToolbar = tk.Frame(self.root, name="frameToolbar", bg="lightblue")
-        self.frameImage = tk.Frame(self.root, name="frameImage")
-        self.frameHistory = tk.Frame(self.root, name="frameHistory", bg="darkgrey")
-        self.frameData = tk.Frame(self.root, name="frameData", bg="darkgrey")
-        self.frameKernel = tk.Frame(self.root, name="frameKernel")
-        
-        # Place frames
-        self.frameToolbar.grid(row=0, column=0, columnspan=4, padx=2, pady=2, sticky="nsew")
-        self.frameImage.grid(row=1, column=0, rowspan=4, columnspan=3, padx=2, pady=2, sticky="nsew")
-        self.frameHistory.grid(row=1, column=3, rowspan=4, padx=2, pady=2, sticky="nsew")
-        self.frameData.grid(row=5, column=0, rowspan=2, columnspan=4, padx=2, pady=2, sticky="nsew")
-        self.frameKernel.grid(row=1, column=0, columnspan=4, padx=2, pady=2, sticky="nsew")
-
-        # Hide frames which are not part of the main window
-        self.frameKernel.grid_forget() # Hides the kernel window during startup
-
-        # Configure row and column weights to control resizing
-        self.root.grid_rowconfigure(0, weight=0)  # Toolbar row (non-resizable)
-        self.root.grid_rowconfigure(1, weight=2)  # Image and history row 
-        self.root.grid_rowconfigure(2, weight=2)  # Image and history row
-        self.root.grid_rowconfigure(3, weight=2)  # Image and history row
-        self.root.grid_rowconfigure(4, weight=2)  # Image and history row
-        self.root.grid_rowconfigure(5, weight=2)  # Data row 
-        self.root.grid_rowconfigure(6, weight=2)  # Data row
-
-        self.root.grid_columnconfigure(0, weight=2)  # Image column
-        self.root.grid_columnconfigure(1, weight=2)  # Image column 
-        self.root.grid_columnconfigure(2, weight=2)  # Image column
-        self.root.grid_columnconfigure(3, weight=2)  # History column
-
-        # Track active frame
+        self.setWindowMain()
         self.frameActive = self.frameImage # Track active frame for switching
 
         # Set up frames
-        self.setFrameToolbar()
-        self.setFrameImage()
-        self.setFrameHistory()
-        self.setFrameData()
-        self.setFrameKernel()
+        self.definePanelToolbar()
+        self.definePanelImage()
+        self.definePanelHistory()
+        self.definePanelData()
+        self.defineWindowKernel()
 
     def run(self):
         """Start the Tkinter main event loop to display the GUI."""
         self.root.mainloop()
 
+    def createFrames(self):
+        # Create frames
+        self.frameToolbar = tk.Frame(self.root, name="frameToolbar", bg="darkgrey")
+        self.frameImage = tk.Frame(self.root, name="frameImage")
+        self.frameHistory = tk.Frame(self.root, name="frameHistory", width=100, bg="darkgrey")
+        self.frameData = tk.Frame(self.root, name="frameData", height=300, bg="darkgrey")
+        self.frameKernel = tk.Frame(self.root, name="frameKernel")
 
-    def setFrameToolbar(self):
-        """Create and configure the top toolbar frame with buttons and dropdown."""
+    def setWindowMain(self):
+        """Switch active window to main window."""
+        # Hide irrelevant frames
+        self.frameKernel.grid_forget() # Hides the kernel window during startup
+
+        # Expose relevant frames
+        self.frameToolbar.grid(row=0, column=0, columnspan=6, padx=2, pady=2, sticky="nsew")
+        self.frameImage.grid(row=1, column=0, rowspan=4, columnspan=5, padx=2, pady=2, sticky="nsew")
+        self.frameHistory.grid(row=1, column=5, rowspan=4, padx=2, pady=2, sticky="nsew")
+        self.frameData.grid(row=5, column=0, rowspan=2, columnspan=6, padx=2, pady=2, sticky="nsew")
+
+        # Control propagation of frames
+        self.frameImage.grid_propagate(False)
+        self.frameHistory.grid_propagate(False)
+        self.frameData.pack_propagate(False)
+        
+    def setWindowKernel(self):
+        """Switch active window to kernel window."""
+        # Hide irrelevant frames
+        self.frameImage.grid_forget()
+        self.frameHistory.grid_forget()
+        self.frameData.grid_forget()
+
+        # Expose relevant frames
+        self.frameKernel.grid(row=1, column=0, columnspan=4, padx=2, pady=2, sticky="nsew")
+
+    def definePanelToolbar(self):
+        """Configure the top toolbar frame with buttons and dropdown."""
         # Kernel kernel dropdown selection dropdown variable
         self.kernelDropdownSelection = tk.StringVar()
         self.kernelDropdownSelection.set("Select Default Kernel")
 
-        # Place buttons
-        tk.Button(self.frameToolbar, text="Load Image", command=self.loadImage).grid(row=0, column=0, padx=4, pady=4, sticky="w")
-        tk.Button(self.frameToolbar, text="Apply Filter", command=self.applyKernelToImage).grid(row=0, column=1, padx=10, pady=5, sticky="w")
-        tk.Button(self.frameToolbar, text="Edit Kernel", command=self.toggleWindowKernel).grid(row=0, column=5, padx=4, pady=4, sticky="w")
-
-        # Dropdown for defaults
+        # Create buttons
+        self.buttonLoad = tk.Button(self.frameToolbar, text="Load Image", command=self.loadImage)
+        self.buttonSave = tk.Button(self.frameToolbar, text="Save Image", command=self.saveImage)
+        self.buttonConvulge = tk.Button(self.frameToolbar, text="Apply Filter", command=self.applyKernelToImage)
+        self.buttonKernelEdit = tk.Button(self.frameToolbar, text="Edit Kernel", command=self.toggleWindowKernel)
+        # Create kernel list dropdown
         self.kernelDropdown = tk.OptionMenu(
                 self.frameToolbar, 
                 self.kernelDropdownSelection, 
                 *self.kernelList.keys(),
                 command=lambda _: self.updateSelectedKernel()
                 )
-        self.kernelDropdown.grid(row=0, column=2, columnspan=3, padx=6, pady=6, sticky="nsew")
+
+        # Place widgets
+        self.buttonLoad.pack(side="left", padx=4, pady=4)
+        self.buttonSave.pack(side="left", padx=4, pady=4)
+        self.buttonConvulge.pack(side="left", padx=4, pady=4)
+        self.kernelDropdown.pack(side="left", padx=4, pady=4)
+        self.buttonKernelEdit.pack(side="left", padx=4, pady=4)
 
         print("Toolbar frame initialized.")
 
-    def setFrameImage(self):
-        """Create the frame for displaying the image and configure resizing behavior."""
+    def definePanelImage(self):
+        """Configure the frame for displaying the image and configure resizing behavior."""
         # Ensures image label's row/column is stretchable
         self.frameImage.grid_rowconfigure(0, weight=1, minsize=1)
         self.frameImage.grid_columnconfigure(0, weight=1, minsize=1)
 
         # Image preview label
-        self.imageLabel = tk.Label(self.frameImage, anchor="center", bg="lightgreen")
+        self.imageLabel = tk.Label(self.frameImage, anchor="center", bg="white")
         self.imageLabel.grid(row=0, column=0, sticky="nsew")
-
-        self.frameImage.grid_propagate(False)
 
         print("Image frame initialized.")
 
-    def setFrameHistory(self):
-        """Create the frame for displaying the filter history (currently placeholder)."""
-        self.frameHistory.configure(bg="darkgrey")
+    def definePanelHistory(self):
+        """Configure the frame for displaying the filter history (currently placeholder)."""
+        # Create Canvas widget to hold content as well as the scrollbar and scrollframe to allow for scrolling
+        self.historyCanvas = tk.Canvas(self.frameHistory, width=260, bg="white", highlightthickness=4)
+        self.historyScrollbar = tk.Scrollbar(self.frameHistory, orient="vertical", width=20, command=self.historyCanvas.yview)
+        self.historyScrollFrame = tk.Frame(self.historyCanvas)
 
-        self.frameHistory.grid_propagate(False)
+        self.historyScrollFrame.bind(
+            "<Configure>",
+            lambda e: self.historyCanvas.configure(scrollregion=self.historyCanvas.bbox("all"))
+        )
+
+        self.historyCanvas.create_window((0,0), window=self.historyScrollFrame, anchor="nw")
+        self.historyCanvas.configure(yscrollcommand=self.historyScrollbar.set)
+
+        self.historyCanvas.pack(side="left", fill="both", expand=True)
+        self.historyScrollbar.pack(side="right", fill="y")
 
         print("History frame initialized.")
 
-    def setFrameData(self):
-        """Create the frame for displaying image data or stats (currently placeholder)."""
-        self.frameData.configure(bg="darkgrey")
-
-        self.frameData.grid_propagate(False)
+    def definePanelData(self):
+        """Configure the frame for displaying image data or stats (currently placeholder)."""
+        # Create a placeholder for the histogram
+        self.frameHist = tk.Frame(self.frameData, bg="lightblue")
+        self.frameHist.pack(fill="both", expand=True)
 
         print("Data frame initialized.")
 
-    def setFrameKernel(self):
-        """Set up the UI elements for the kernel editing interface."""
+    def defineWindowKernel(self):
+        """Configure the UI elements for the kernel editing interface."""
         # Save kernel
         tk.Button(self.frameKernel, text="Save Kernel", command=self.saveKernel).grid(row=0, column=0, padx=4, pady=4, sticky="w")
         self.kernelNameVar = tk.StringVar()
@@ -140,21 +165,12 @@ class Window:
     def toggleWindowKernel(self):
         """Toggle between the main image view and the kernel editing view."""
         if self.frameActive == self.frameImage:
-            self.frameImage.grid_forget()
-            self.frameHistory.grid_forget()
-            self.frameData.grid_forget()
-            self.frameKernel.grid(row=1, column=0, columnspan=4, padx=2, pady=2, sticky="nsew")
+            self.setWindowKernel()
             self.frameActive = self.frameKernel
         elif self.frameActive == self.frameKernel:
-            self.frameKernel.grid_forget()
-            self.frameImage.grid(row=1, column=0, rowspan=4, columnspan=3, padx=2, pady=2, sticky="nsew")
-            self.frameHistory.grid(row=1, column=3, rowspan=4, padx=2, pady=2, sticky="nsew")
-            self.frameData.grid(row=5, column=0, rowspan=2, columnspan=4, padx=2, pady=2, sticky="nsew")
+            self.setWindowMain()
             self.frameActive = self.frameImage
-            self.frameImage.grid_propagate(False)
-            self.frameHistory.grid_propagate(False)
-            self.frameData.grid_propagate(False)
-
+            
         print(f"Current window -> {self.frameActive.winfo_name()}")
 
     def setKernelGrid(self, size):
@@ -252,6 +268,21 @@ class Window:
                 self.kernelMatrixEntries[i][j].delete(0, tk.END)
                 self.kernelMatrixEntries[i][j].insert(0, str(matrix[i][j]))
 
+    def updateHistoryThumbnails(self):
+        """Render thumbnail buttons in the scrollable history panel."""
+        for widget in self.historyScrollFrame.winfo_children():
+            widget.destroy()
+        self.historyThumbnails.clear()
+
+        for i, img in enumerate(self.history):
+            thumb = img.copy()
+            thumb.thumbnail((256, 256))
+            thumbTk = ImageTk.PhotoImage(thumb)
+            self.historyThumbnails.append(thumbTk)
+
+            btn = tk.Button(self.historyScrollFrame, image=thumbTk, command=lambda i=i: self.restoreHistory(i))
+            btn.pack(pady=4, anchor="center")
+
     def getMatrixFromUI(self):
         """
         Retrieve kernel values from the entry grid.
@@ -278,11 +309,16 @@ class Window:
         filepath = filedialog.askopenfilename()
         if filepath:
             self.image = access.loadImage(filepath)
-            self.displayedImage = access.prepImageForWindow(self.image)
-            if self.displayedImage:
-                self.imageLabel.config(image=self.displayedImage, text="")
+            self.imageThumbnail = access.prepImageForWindow(self.image)
+            if self.imageThumbnail:
+                self.imageLabel.config(image=self.imageThumbnail, text="")
             else:
                 self.imageLabel.config(text="Failed to load image.")
+
+        # self.displayHistogram()
+
+    def saveImage(self):
+        access.saveImage(self.image)
 
     def applyKernelToImage(self):
         """
@@ -293,13 +329,44 @@ class Window:
             print("No image loaded.")
             return
 
+        # Save current image to history before applying new kernel
+        self.history.append(self.image.copy())
+        self.updateHistoryThumbnails()
+
         kernel = self.getMatrixFromUI()
         resultingImage = process.applyKernelToImage(self.image, kernel)
-        self.displayedImage = access.prepImageForWindow(resultingImage) # Create thumbnail to be displayed
-        self.imageLabel.config(image=self.displayedImage)
+        self.imageThumbnail = access.prepImageForWindow(resultingImage) # Create thumbnail to be displayed
+        self.imageLabel.config(image=self.imageThumbnail)
         self.image = resultingImage # Store updated image
 
         print("Image processing complete.")
+
+    def restoreHistory(self, index):
+        """Restore an image from the history and update the displayed image."""
+        # Ensure the index is valid
+        if 0 <= index < len(self.history):
+            # Restore the image from the history at the given index
+            self.image = self.history[index]
+            self.imageThumbnail = access.prepImageForWindow(self.image)  # Create a new thumbnail
+            self.imageLabel.config(image=self.imageThumbnail)  # Update the displayed image
+            print(f"Restored image from history at index {index}.")
+        else:
+            print("Invalid history index.")
+"""  
+    def displayHistogram(self):
+        Get histogram data from access.py and display it.
+        if self.image:
+            # Get histogram data using access.py
+            hist, bins = process.getHistogram(self.image)
+
+            # Generate the matplotlib figure
+            fig = process.generateHistogramPlot(hist, bins)
+
+            # Embed the plot into the Tkinter frame
+            self.canvas = FigureCanvasTkAgg(fig, master=self.frameHist)
+            self.canvas.draw()
+            self.canvas.get_tk_widget().pack(fill="both", expand=True)
+"""
 
 if __name__ == "__main__":
     default = Window()

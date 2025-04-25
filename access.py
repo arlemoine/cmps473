@@ -18,6 +18,24 @@ def loadImage(filepath):
         print(f"Error loading image: {e}")
         return None
 
+def saveImage(image):
+    """Save image to specified file path."""
+    try:
+        # Open a file save dialog to choose where to save image
+        filepath = filedialog.asksaveasfilename(
+            defaultextension=".png",
+            filetypes=[("PNG Files", "*.png"), ("JPEG Files", "*.jpg"), ("All Files", "*.*")],
+            title="Save Image As"
+        )
+
+        if filepath:
+            image.save(filepath)
+            print(f"Image saved successfully to {filepath}")
+        else:
+            print("No file selected. Image not saved.")
+    except Exception as e:
+        print(f"Error saving image: {e}")
+
 def loadKernel():
     filepath = filedialog.askopenfilename(filetypes=[("JSON Files", "*.json")])
 
