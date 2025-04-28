@@ -136,8 +136,8 @@ class Window:
     def definePanelData(self):
         """Configure the frame for displaying image data or stats (currently placeholder)."""
         # Create a placeholder for the histogram
-        self.frameHist = tk.Frame(self.frameData, bg="lightblue")
-        self.frameHist.pack(fill="both", expand=True)
+        self.histLabel = tk.Label(self.frameData, anchor="center", bg="white")
+        self.histLabel.pack(fill="both", expand=True)
 
         print("Data frame initialized.")
 
@@ -308,14 +308,26 @@ class Window:
         """
         filepath = filedialog.askopenfilename()
         if filepath:
-            self.image = access.loadImage(filepath)
+            colorImage = access.loadImage(filepath)
+            self.image = process.grayscale(colorImage)
             self.imageThumbnail = access.prepImageForWindow(self.image)
+            self.getHist()
             if self.imageThumbnail:
                 self.imageLabel.config(image=self.imageThumbnail, text="")
+                self.history.append(self.image.copy())
+                self.updateHistoryThumbnails()
             else:
                 self.imageLabel.config(text="Failed to load image.")
 
-        # self.displayHistogram()
+    def loadHist(self):
+        filepath = "temp/hist.png"
+        if filepath:
+            pilImage = access.loadImage(filepath)
+            self.histImage = ImageTk.PhotoImage(pilImage) # Convert to PhotoImage
+            self.histLabel.config(image=self.histImage, text="")
+            print("Histogram loaded.")
+        else:
+            print("Histogram image could not be found.")
 
     def saveImage(self):
         access.saveImage(self.image)
@@ -329,17 +341,23 @@ class Window:
             print("No image loaded.")
             return
 
-        # Save current image to history before applying new kernel
-        self.history.append(self.image.copy())
-        self.updateHistoryThumbnails()
-
         kernel = self.getMatrixFromUI()
         resultingImage = process.applyKernelToImage(self.image, kernel)
+
         self.imageThumbnail = access.prepImageForWindow(resultingImage) # Create thumbnail to be displayed
         self.imageLabel.config(image=self.imageThumbnail)
         self.image = resultingImage # Store updated image
 
+        self.history.append(self.image.copy())
+        self.updateHistoryThumbnails()
+
+        self.getHist()
+
         print("Image processing complete.")
+
+    def getHist(self):
+        process.saveHistogram(self.image)
+        self.loadHist()
 
     def restoreHistory(self, index):
         """Restore an image from the history and update the displayed image."""
@@ -349,24 +367,10 @@ class Window:
             self.image = self.history[index]
             self.imageThumbnail = access.prepImageForWindow(self.image)  # Create a new thumbnail
             self.imageLabel.config(image=self.imageThumbnail)  # Update the displayed image
+            self.getHist()
             print(f"Restored image from history at index {index}.")
         else:
             print("Invalid history index.")
-"""  
-    def displayHistogram(self):
-        Get histogram data from access.py and display it.
-        if self.image:
-            # Get histogram data using access.py
-            hist, bins = process.getHistogram(self.image)
-
-            # Generate the matplotlib figure
-            fig = process.generateHistogramPlot(hist, bins)
-
-            # Embed the plot into the Tkinter frame
-            self.canvas = FigureCanvasTkAgg(fig, master=self.frameHist)
-            self.canvas.draw()
-            self.canvas.get_tk_widget().pack(fill="both", expand=True)
-"""
 
 if __name__ == "__main__":
     default = Window()
