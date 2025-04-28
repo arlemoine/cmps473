@@ -1,4 +1,4 @@
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageFilter
 import numpy as np
 from scipy.signal import convolve2d # Maybe?
 import matplotlib.pyplot as plt
@@ -65,6 +65,10 @@ def generateHistogramPlot(hist, bins):
     ax.set_ylabel("Frequency")
     return fig
 
-def histEqualization(image):
-    equalizedImage = ImageOps.equalize(image)
-    return equalizedImage
+def applyHistEq(image):
+    outputImage = ImageOps.equalize(image)
+    return outputImage
+
+def applyMedianFilter(image, neighborSize=3):
+    outputImage = image.filter(ImageFilter.MedianFilter(size=neighborSize))
+    return outputImage

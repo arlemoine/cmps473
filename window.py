@@ -79,14 +79,17 @@ class Window:
         # Kernel kernel dropdown selection dropdown variable
         self.kernelDropdownSelection = tk.StringVar()
         self.kernelDropdownSelection.set("Kernel Selection")
+        self.medianNeighborSize = tk.StringVar()
+        self.medianNeighborSize.set("Median Size")
 
         # Create buttons
         self.buttonLoad = tk.Button(self.frameToolbar, text="Load Image", command=self.loadImage)
         self.buttonSave = tk.Button(self.frameToolbar, text="Save Image", command=self.saveImage)
         self.buttonConvulge = tk.Button(self.frameToolbar, text="Convulge via Kernel", command=self.applyKernelToImage)
         self.buttonKernelEdit = tk.Button(self.frameToolbar, text="Edit Kernel", command=self.toggleWindowKernel)
-        self.buttonHistEqualization = tk.Button(self.frameToolbar, text="Equalize", command=self.getEqualization)
+        self.buttonHistEqualization = tk.Button(self.frameToolbar, text="Equalize", command=self.applyEqualization)
         self.buttonCompare = tk.Button(self.frameToolbar, text="Compare", command=self.toggleOriginalImage)
+        self.buttonMedianFilter = tk.Button(self.frameToolbar, text="Filter via Median", command=self.applyMedianFilter)
 
         # Create kernel list dropdown
         self.kernelDropdown = tk.OptionMenu(
@@ -96,11 +99,15 @@ class Window:
                 command=lambda _: self.updateSelectedKernel()
                 )
 
+        self.medianSizeEntry = tk.Entry(self.frameToolbar, textvariable=self.medianNeighborSize)
+
         # Place widgets
         self.buttonLoad.pack(side="left", padx=4, pady=4)
         self.buttonSave.pack(side="left", padx=4, pady=4)
         self.buttonCompare.pack(side="left", padx=4, pady=4)
         self.buttonHistEqualization.pack(side="left", padx=4, pady=4)
+        self.buttonMedianFilter.pack(side="left", padx=4, pady=4)
+        self.medianSizeEntry.pack(side="left", padx=4, pady=4)
         self.buttonConvulge.pack(side="left", padx=4, pady=4)
         self.kernelDropdown.pack(side="left", padx=4, pady=4)
         self.buttonKernelEdit.pack(side="left", padx=4, pady=4)
@@ -355,14 +362,19 @@ class Window:
         if 0 <= index < len(self.history):
             # Restore the image from the history at the given index
             previousImage = self.history[index]
-            self.updateImage(previousImage)
+            self.updateImage(previousImage, False)
             self.histIndexPointer = index
             print(f"Restored image from history at index {index}.")
         else:
             print("Invalid history index.")
 
-    def getEqualization(self):
-        resultingImage = process.histEqualization(self.image)
+    def applyEqualization(self):
+        resultingImage = process.applyHistEq(self.image)
+        self.updateImage(resultingImage)
+
+    def applyMedianFilter(self):
+        size = int(self.medianNeighborSize.get())
+        resultingImage = process.applyMedianFilter(self.image, size)
         self.updateImage(resultingImage)
 
     def updateImage(self, newImage, updateHistory=True):
