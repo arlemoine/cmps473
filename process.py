@@ -1,4 +1,4 @@
-from PIL import Image
+from PIL import Image, ImageOps
 import numpy as np
 from scipy.signal import convolve2d # Maybe?
 import matplotlib.pyplot as plt
@@ -64,3 +64,7 @@ def generateHistogramPlot(hist, bins):
     ax.set_xlabel("Pixel Intensity")
     ax.set_ylabel("Frequency")
     return fig
+
+def histEqualization(image):
+    equalizedImage = ImageOps.equalize(image)
+    return equalizedImage

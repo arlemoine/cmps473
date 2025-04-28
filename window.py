@@ -24,6 +24,7 @@ class Window:
         self.historyThumbnails = []
         self.imageThumbnail = None
         self.image = None
+        self.historyToggle = False
 
         self.setWindowMain()
         self.frameActive = self.frameImage # Track active frame for switching
@@ -77,13 +78,16 @@ class Window:
         """Configure the top toolbar frame with buttons and dropdown."""
         # Kernel kernel dropdown selection dropdown variable
         self.kernelDropdownSelection = tk.StringVar()
-        self.kernelDropdownSelection.set("Select Default Kernel")
+        self.kernelDropdownSelection.set("Kernel Selection")
 
         # Create buttons
         self.buttonLoad = tk.Button(self.frameToolbar, text="Load Image", command=self.loadImage)
         self.buttonSave = tk.Button(self.frameToolbar, text="Save Image", command=self.saveImage)
-        self.buttonConvulge = tk.Button(self.frameToolbar, text="Apply Filter", command=self.applyKernelToImage)
+        self.buttonConvulge = tk.Button(self.frameToolbar, text="Convulge via Kernel", command=self.applyKernelToImage)
         self.buttonKernelEdit = tk.Button(self.frameToolbar, text="Edit Kernel", command=self.toggleWindowKernel)
+        self.buttonHistEqualization = tk.Button(self.frameToolbar, text="Equalize", command=self.getEqualization)
+        self.buttonCompare = tk.Button(self.frameToolbar, text="Compare", command=self.toggleOriginalImage)
+
         # Create kernel list dropdown
         self.kernelDropdown = tk.OptionMenu(
                 self.frameToolbar, 
@@ -95,6 +99,8 @@ class Window:
         # Place widgets
         self.buttonLoad.pack(side="left", padx=4, pady=4)
         self.buttonSave.pack(side="left", padx=4, pady=4)
+        self.buttonCompare.pack(side="left", padx=4, pady=4)
+        self.buttonHistEqualization.pack(side="left", padx=4, pady=4)
         self.buttonConvulge.pack(side="left", padx=4, pady=4)
         self.kernelDropdown.pack(side="left", padx=4, pady=4)
         self.buttonKernelEdit.pack(side="left", padx=4, pady=4)
@@ -309,15 +315,8 @@ class Window:
         filepath = filedialog.askopenfilename()
         if filepath:
             colorImage = access.loadImage(filepath)
-            self.image = process.grayscale(colorImage)
-            self.imageThumbnail = access.prepImageForWindow(self.image)
-            self.getHist()
-            if self.imageThumbnail:
-                self.imageLabel.config(image=self.imageThumbnail, text="")
-                self.history.append(self.image.copy())
-                self.updateHistoryThumbnails()
-            else:
-                self.imageLabel.config(text="Failed to load image.")
+            grayscaleImage = process.grayscale(colorImage)
+            self.updateImage(grayscaleImage)
 
     def loadHist(self):
         filepath = "temp/hist.png"
@@ -343,16 +342,7 @@ class Window:
 
         kernel = self.getMatrixFromUI()
         resultingImage = process.applyKernelToImage(self.image, kernel)
-
-        self.imageThumbnail = access.prepImageForWindow(resultingImage) # Create thumbnail to be displayed
-        self.imageLabel.config(image=self.imageThumbnail)
-        self.image = resultingImage # Store updated image
-
-        self.history.append(self.image.copy())
-        self.updateHistoryThumbnails()
-
-        self.getHist()
-
+        self.updateImage(resultingImage)
         print("Image processing complete.")
 
     def getHist(self):
@@ -364,13 +354,46 @@ class Window:
         # Ensure the index is valid
         if 0 <= index < len(self.history):
             # Restore the image from the history at the given index
-            self.image = self.history[index]
-            self.imageThumbnail = access.prepImageForWindow(self.image)  # Create a new thumbnail
-            self.imageLabel.config(image=self.imageThumbnail)  # Update the displayed image
-            self.getHist()
+            previousImage = self.history[index]
+            self.updateImage(previousImage)
+            self.histIndexPointer = index
             print(f"Restored image from history at index {index}.")
         else:
             print("Invalid history index.")
+
+    def getEqualization(self):
+        resultingImage = process.histEqualization(self.image)
+        self.updateImage(resultingImage)
+
+    def updateImage(self, newImage, updateHistory=True):
+        # Update displayed image
+        self.imageThumbnail = access.prepImageForWindow(newImage) # Create thumbnail to be displayed
+        self.imageLabel.config(image=self.imageThumbnail)
+        self.image = newImage
+        print("Image updated.")
+
+        if updateHistory:
+            # Update history panel
+            self.history.append(self.image.copy())
+            self.updateHistoryThumbnails()
+            print("History updated.")
+
+        # Update histogram
+        self.getHist()
+        print("Histogram updated.")
+
+    def toggleOriginalImage(self):
+        if self.historyToggle == False:
+            self.imagePlaceholder = self.image
+            self.historyToggle = True
+            self.updateImage(self.history[0], False)
+            print("Comparison toggle -> Original")
+        else:
+            self.updateImage(self.imagePlaceholder, False)
+            self.imagePlaceholder = None
+            self.historyToggle = False
+            print("Comparison toggle -> Recent")
+            
 
 if __name__ == "__main__":
     default = Window()
