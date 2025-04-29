@@ -3,11 +3,13 @@ import access
 from tkinter import filedialog
 from PIL import ImageTk # Needed for tkinter label compatibility
 import process
+import ttkbootstrap as tb
+from ttkbootstrap.tooltip import ToolTip
 
 class Window:
     def __init__(self):
         # Configure root frame
-        self.root = tk.Tk()
+        self.root = tb.Window(themename="cosmo")
         self.root.title("Image Filtration")
         self.root.minsize(1200, 1000)
 
@@ -25,6 +27,7 @@ class Window:
         self.imageThumbnail = None
         self.image = None
         self.historyToggle = False
+        self.medianSize=[3, 5, 7, 9, 11, 13, 15, 17, 19, 21]
 
         self.setWindowMain()
         self.frameActive = self.frameImage # Track active frame for switching
@@ -42,11 +45,11 @@ class Window:
 
     def createFrames(self):
         # Create frames
-        self.frameToolbar = tk.Frame(self.root, name="frameToolbar", bg="darkgrey")
-        self.frameImage = tk.Frame(self.root, name="frameImage")
-        self.frameHistory = tk.Frame(self.root, name="frameHistory", width=100, bg="darkgrey")
-        self.frameData = tk.Frame(self.root, name="frameData", height=300, bg="darkgrey")
-        self.frameKernel = tk.Frame(self.root, name="frameKernel")
+        self.frameToolbar = tb.Frame(self.root, name="frameToolbar", bootstyle="dark")
+        self.frameImage = tb.Frame(self.root, name="frameImage", bootstyle="dark")
+        self.frameHistory = tb.Frame(self.root, name="frameHistory", width=100, bootstyle="dark")
+        self.frameData = tb.Frame(self.root, name="frameData", height=300, bootstyle="dark")
+        self.frameKernel = tb.Frame(self.root, name="frameKernel", bootstyle="dark")
 
     def setWindowMain(self):
         """Switch active window to main window."""
@@ -82,35 +85,57 @@ class Window:
         self.medianNeighborSize = tk.StringVar()
         self.medianNeighborSize.set("Median Size")
 
+        # Icons
+        self.iconLoad = tk.PhotoImage(file="resources/load.png")
+        self.iconSave = tk.PhotoImage(file="resources/save.png")
+        self.iconCompare = tk.PhotoImage(file="resources/compare.png")
+        self.iconConvolution = tk.PhotoImage(file="resources/convolution.png")
+        self.iconMedianFilter = tk.PhotoImage(file="resources/medianFilter.png")
+        self.iconHist = tk.PhotoImage(file="resources/equalize.png")
+
+        # Separators
+        self.separator1 = tb.Separator(self.frameToolbar, orient="vertical")
+        self.separator2 = tb.Separator(self.frameToolbar, orient="vertical")
+        self.separator3 = tb.Separator(self.frameToolbar, orient="vertical")
+
         # Create buttons
-        self.buttonLoad = tk.Button(self.frameToolbar, text="Load Image", command=self.loadImage)
-        self.buttonSave = tk.Button(self.frameToolbar, text="Save Image", command=self.saveImage)
-        self.buttonConvulge = tk.Button(self.frameToolbar, text="Convulge via Kernel", command=self.applyKernelToImage)
-        self.buttonKernelEdit = tk.Button(self.frameToolbar, text="Edit Kernel", command=self.toggleWindowKernel)
-        self.buttonHistEqualization = tk.Button(self.frameToolbar, text="Equalize", command=self.applyEqualization)
-        self.buttonCompare = tk.Button(self.frameToolbar, text="Compare", command=self.toggleOriginalImage)
-        self.buttonMedianFilter = tk.Button(self.frameToolbar, text="Filter via Median", command=self.applyMedianFilter)
+        self.buttonLoad = tb.Button(self.frameToolbar, bootstyle="light", image=self.iconLoad, command=self.loadImage)
+        self.buttonSave = tb.Button(self.frameToolbar, bootstyle="light", image=self.iconSave, command=self.saveImage)
+        self.buttonConvulge = tb.Button(self.frameToolbar, bootstyle="light", image=self.iconConvolution, command=self.applyKernelToImage)
+        self.buttonKernelEdit = tb.Button(self.frameToolbar, bootstyle="dark-link", text="Edit Kernel", command=self.toggleWindowKernel)
+        self.buttonHistEqualization = tb.Button(self.frameToolbar, bootstyle="light", image=self.iconHist, command=self.applyEqualization)
+        self.buttonCompare = tb.Button(self.frameToolbar, bootstyle="light", image=self.iconCompare, command=self.toggleOriginalImage)
+        self.buttonMedianFilter = tb.Button(self.frameToolbar, bootstyle="light", image=self.iconMedianFilter, command=self.applyMedianFilter)
 
         # Create kernel list dropdown
-        self.kernelDropdown = tk.OptionMenu(
-                self.frameToolbar, 
-                self.kernelDropdownSelection, 
-                *self.kernelList.keys(),
-                command=lambda _: self.updateSelectedKernel()
-                )
-
-        self.medianSizeEntry = tk.Entry(self.frameToolbar, textvariable=self.medianNeighborSize)
+        self.kernelDropdown = tb.OptionMenu(
+            self.frameToolbar, 
+            self.kernelDropdownSelection, 
+            bootstyle="light",
+            *self.kernelList.keys(),
+            command=lambda _: self.updateSelectedKernel()
+            )
+        self.medianSizeDropdown = tb.OptionMenu(
+                    self.frameToolbar, 
+                    self.medianNeighborSize, 
+                    bootstyle="light",
+                    *self.medianSize
+                    )
+       # self.medianSizeEntry = tb.Entry(self.frameToolbar, bootstyle="light", textvariable=self.medianNeighborSize)
 
         # Place widgets
-        self.buttonLoad.pack(side="left", padx=4, pady=4)
-        self.buttonSave.pack(side="left", padx=4, pady=4)
-        self.buttonCompare.pack(side="left", padx=4, pady=4)
-        self.buttonHistEqualization.pack(side="left", padx=4, pady=4)
-        self.buttonMedianFilter.pack(side="left", padx=4, pady=4)
-        self.medianSizeEntry.pack(side="left", padx=4, pady=4)
-        self.buttonConvulge.pack(side="left", padx=4, pady=4)
-        self.kernelDropdown.pack(side="left", padx=4, pady=4)
-        self.buttonKernelEdit.pack(side="left", padx=4, pady=4)
+        self.buttonLoad.pack(side="left", padx=6, pady=6)
+        self.buttonSave.pack(side="left", padx=6, pady=6)
+        self.separator1.pack(side="left", fill="x", padx=10)
+        self.buttonCompare.pack(side="left", padx=6, pady=6)
+        self.buttonHistEqualization.pack(side="left", padx=6, pady=6)
+        self.separator2.pack(side="left", fill="x", padx=10)
+        self.buttonMedianFilter.pack(side="left", padx=6, pady=6)
+        self.medianSizeDropdown.pack(side="left", padx=6, pady=6)
+        self.separator3.pack(side="left", fill="x", padx=10)
+        self.buttonConvulge.pack(side="left", padx=6, pady=6)
+        self.kernelDropdown.pack(side="left", padx=6, pady=6)
+        self.buttonKernelEdit.pack(side="left", padx=6, pady=6)
 
         print("Toolbar frame initialized.")
 
@@ -121,15 +146,15 @@ class Window:
         self.frameImage.grid_columnconfigure(0, weight=1, minsize=1)
 
         # Image preview label
-        self.imageLabel = tk.Label(self.frameImage, anchor="center", bg="white")
-        self.imageLabel.grid(row=0, column=0, sticky="nsew")
+        self.imageLabel = tb.Label(self.frameImage, anchor="center", bootstyle="dark")
+        self.imageLabel.grid(row=0, column=0, padx=8, pady=8, sticky="nsew")
 
         print("Image frame initialized.")
 
     def definePanelHistory(self):
         """Configure the frame for displaying the filter history (currently placeholder)."""
         # Create Canvas widget to hold content as well as the scrollbar and scrollframe to allow for scrolling
-        self.historyCanvas = tk.Canvas(self.frameHistory, width=260, bg="white", highlightthickness=4)
+        self.historyCanvas = tk.Canvas(self.frameHistory, width=260, highlightthickness=0)
         self.historyScrollbar = tk.Scrollbar(self.frameHistory, orient="vertical", width=20, command=self.historyCanvas.yview)
         self.historyScrollFrame = tk.Frame(self.historyCanvas)
 
@@ -142,14 +167,14 @@ class Window:
         self.historyCanvas.configure(yscrollcommand=self.historyScrollbar.set)
 
         self.historyCanvas.pack(side="left", fill="both", expand=True)
-        self.historyScrollbar.pack(side="right", fill="y")
+        self.historyScrollbar.pack(side="right", fill="both")
 
         print("History frame initialized.")
 
     def definePanelData(self):
         """Configure the frame for displaying image data or stats (currently placeholder)."""
         # Create a placeholder for the histogram
-        self.histLabel = tk.Label(self.frameData, anchor="center", bg="white")
+        self.histLabel = tb.Label(self.frameData, anchor="center", bootstyle="inverse")
         self.histLabel.pack(fill="both", expand=True)
 
         print("Data frame initialized.")
@@ -157,20 +182,20 @@ class Window:
     def defineWindowKernel(self):
         """Configure the UI elements for the kernel editing interface."""
         # Save kernel
-        tk.Button(self.frameKernel, text="Save Kernel", command=self.saveKernel).grid(row=0, column=0, padx=4, pady=4, sticky="w")
+        tb.Button(self.frameKernel, text="Save Kernel", bootstyle="success-outline", command=self.saveKernel).grid(row=0, column=0, padx=4, pady=4, sticky="w")
         self.kernelNameVar = tk.StringVar()
         self.kernelNameEntry = tk.Entry(self.frameKernel, textvariable=self.kernelNameVar)
         self.kernelNameEntry.grid(row=0, column=1, columnspan=2, padx=4, pady=4)
 
         # Kernel size entry
-        tk.Button(self.frameKernel, text="Resize (odd number)", command=self.getKernelSizeFromUI).grid(row=1, column=0, padx=4, pady=4, sticky="w")
-        self.kernelSizeEntry = tk.Entry(self.frameKernel)
+        tb.Button(self.frameKernel, text="Resize (odd number)", bootstyle="success-outline", command=self.getKernelSizeFromUI).grid(row=1, column=0, padx=4, pady=4, sticky="w")
+        self.kernelSizeEntry = tb.Entry(self.frameKernel)
         self.kernelSizeEntry.grid(row=1, column=1, columnspan=2, padx=4, pady=4)
 
         # Kernel grid frame
-        self.kernelNameLabel = tk.Label(self.frameKernel, text="Kernel Matrix") 
+        self.kernelNameLabel = tb.Label(self.frameKernel, text="Kernel Matrix", bootstyle="inverse") 
         self.kernelNameLabel.grid(row=2, column=0, columnspan=3, padx=4, pady=4)
-        self.frameKernelMatrix = tk.Frame(self.frameKernel)
+        self.frameKernelMatrix = tb.Frame(self.frameKernel, bootstyle="dark")
         self.frameKernelMatrix.grid(row=3, column=0, columnspan=3, padx=4, pady=4, sticky="nw")
 
         print("Kernel frame initialized.")
@@ -293,8 +318,8 @@ class Window:
             thumbTk = ImageTk.PhotoImage(thumb)
             self.historyThumbnails.append(thumbTk)
 
-            btn = tk.Button(self.historyScrollFrame, image=thumbTk, command=lambda i=i: self.restoreHistory(i))
-            btn.pack(pady=4, anchor="center")
+            btn = tb.Button(self.historyScrollFrame, bootstyle="dark", image=thumbTk, command=lambda i=i: self.restoreHistory(i))
+            btn.pack()
 
     def getMatrixFromUI(self):
         """
