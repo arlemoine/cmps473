@@ -5,12 +5,13 @@ from PIL import ImageTk # Needed for tkinter label compatibility
 import process
 import ttkbootstrap as tb
 from ttkbootstrap.tooltip import ToolTip
+from ttkbootstrap.constants import LEFT
 
 class Window:
     def __init__(self):
         # Configure root frame
         self.root = tb.Window(themename="cosmo")
-        self.root.title("Image Filtration")
+        self.root.title("IMAGE - Image Manipulation And General Enhancement")
         self.root.minsize(1200, 1000)
 
         # Configure grid of root
@@ -99,13 +100,13 @@ class Window:
         self.separator3 = tb.Separator(self.frameToolbar, orient="vertical")
 
         # Create buttons
-        self.buttonLoad = tb.Button(self.frameToolbar, bootstyle="light", image=self.iconLoad, command=self.loadImage)
-        self.buttonSave = tb.Button(self.frameToolbar, bootstyle="light", image=self.iconSave, command=self.saveImage)
-        self.buttonConvulge = tb.Button(self.frameToolbar, bootstyle="light", image=self.iconConvolution, command=self.applyKernelToImage)
+        self.buttonLoad = tb.Button(self.frameToolbar, bootstyle="light", image=self.iconLoad, text="Open", compound=LEFT, command=self.loadImage)
+        self.buttonSave = tb.Button(self.frameToolbar, bootstyle="light", image=self.iconSave, text="Save", compound=LEFT, command=self.saveImage)
+        self.buttonConvulge = tb.Button(self.frameToolbar, bootstyle="light", image=self.iconConvolution, text="Convulge", compound=LEFT, command=self.applyKernelToImage)
         self.buttonKernelEdit = tb.Button(self.frameToolbar, bootstyle="dark-link", text="Edit Kernel", command=self.toggleWindowKernel)
-        self.buttonHistEqualization = tb.Button(self.frameToolbar, bootstyle="light", image=self.iconHist, command=self.applyEqualization)
-        self.buttonCompare = tb.Button(self.frameToolbar, bootstyle="light", image=self.iconCompare, command=self.toggleOriginalImage)
-        self.buttonMedianFilter = tb.Button(self.frameToolbar, bootstyle="light", image=self.iconMedianFilter, command=self.applyMedianFilter)
+        self.buttonHistEqualization = tb.Button(self.frameToolbar, bootstyle="light", image=self.iconHist, text="Equalize", compound=LEFT, command=self.applyEqualization)
+        self.buttonCompare = tb.Button(self.frameToolbar, bootstyle="light", image=self.iconCompare, text="Compare", compound=LEFT, command=self.toggleOriginalImage)
+        self.buttonMedianFilter = tb.Button(self.frameToolbar, bootstyle="light", image=self.iconMedianFilter, text="Median Filter", compound=LEFT, command=self.applyMedianFilter)
 
         # Create kernel list dropdown
         self.kernelDropdown = tb.OptionMenu(
