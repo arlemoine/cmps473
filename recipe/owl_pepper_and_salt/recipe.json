@@ -1,0 +1,16 @@
+{
+    "name": "owl pepper and salt",
+    "recipe": [
+        {
+            "type": "median",
+            "size": 9
+        },
+        {
+            "type": "convolution",
+            "kernel_name": "3x3 Box Blur"
+        },
+        {
+            "type": "hist_eq"
+        }
+    ]
+}

@@ -1,0 +1,16 @@
+{
+    "name": "Eq Med3 EdgeDetect",
+    "recipe": [
+        {
+            "type": "hist_eq"
+        },
+        {
+            "type": "median",
+            "size": 3
+        },
+        {
+            "type": "convolution",
+            "kernel_name": "3x3 Edge Detect"
+        }
+    ]
+}

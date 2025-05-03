@@ -87,10 +87,17 @@ def loadKernelList():
 
     return sortedKernelDict
 
+def normalizeDirName(name):
+    """
+    Normalize the name of the kernel directory.
+    """
+    # Normalize the name for filesystem use
+    folderName_v1 = name.lower() # Make directory all lower-case
+    folderName_v2 = folderName_v1.replace(" ", "_") # Replace spaces in directory name with "_"
+    return folderName_v2
 
 def saveKernel(name, matrix):
-    # Normalize the name for filesystem use
-    folderName = name.lower().replace(" ", "_")
+    folderName = normalizeDirName(name)
     folderPath = Path("./kernel") / folderName
     filePath = folderPath / "kernel.json"
 
@@ -109,3 +116,57 @@ def saveKernel(name, matrix):
         print(f"Saved kernel '{name}' to {filePath}")
     except Exception as e:
         print(f"Error saving kernel '{name}': {e}")
+
+def saveRecipe(recipeName, tempRecipe):
+    """
+    Save recipe as json file.
+    """
+    folderName = normalizeDirName(recipeName)
+    folderPath = Path("./recipe") / folderName
+    filePath = folderPath / "recipe.json"
+
+    # Make sure the folder path exists
+    folderPath.mkdir(parents=True, exist_ok=True)
+
+    # Save the recipe
+    recipeData = {
+        "name": recipeName,
+        "recipe": tempRecipe
+    }
+
+    try:
+        with open(filePath, "w") as f:
+            json.dump(recipeData, f, indent=4)
+        print(f"Saved recipe '{recipeName}' to {filePath}")
+    except Exception as e:
+        print(f"Error saving recipe '{recipeName}': {e}")
+
+def loadRecipe():
+    """
+    Opens a file dialog to select a recipe JSON file, loads and returns the list of steps.
+    
+    Returns:
+        list[dict] or None
+    """
+    filepath = filedialog.askopenfilename(
+        filetypes=[("JSON Files", "*.json")],
+        title="Open Recipe File"
+    )
+
+    if not filepath:
+        return None
+
+    try:
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+
+        steps = data.get("recipe")
+
+        if isinstance(steps, list):
+            return steps
+        else:
+            print("Error: Recipe file must contain a list of steps.")
+            return None
+    except (json.JSONDecodeError, IOError) as e:
+        print(f"Error loading recipe from file: {e}")
+        return None

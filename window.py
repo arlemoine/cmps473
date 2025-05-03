@@ -1,6 +1,6 @@
 import tkinter as tk
 import access
-from tkinter import filedialog
+from tkinter import filedialog, simpledialog
 from PIL import ImageTk # Needed for tkinter label compatibility
 import process
 import ttkbootstrap as tb
@@ -28,7 +28,8 @@ class Window:
         self.imageThumbnail = None
         self.image = None
         self.historyToggle = False
-        self.medianSize=[3, 5, 7, 9, 11, 13, 15, 17, 19, 21]
+        self.medianSize =[3, 5, 7, 9, 11, 13, 15, 17, 19, 21]
+        self.tempRecipe = []
 
         self.setWindowMain()
         self.frameActive = self.frameImage # Track active frame for switching
@@ -108,7 +109,7 @@ class Window:
         self.buttonCompare = tb.Button(self.frameToolbar, bootstyle="light", image=self.iconCompare, text="Compare", compound=LEFT, command=self.toggleOriginalImage)
         self.buttonMedianFilter = tb.Button(self.frameToolbar, bootstyle="light", image=self.iconMedianFilter, text="Median Filter", compound=LEFT, command=self.applyMedianFilter)
 
-        # Create kernel list dropdown
+        # Create dropdown lists
         self.kernelDropdown = tb.OptionMenu(
             self.frameToolbar, 
             self.kernelDropdownSelection, 
@@ -122,7 +123,6 @@ class Window:
                     bootstyle="light",
                     *self.medianSize
                     )
-       # self.medianSizeEntry = tb.Entry(self.frameToolbar, bootstyle="light", textvariable=self.medianNeighborSize)
 
         # Place widgets
         self.buttonLoad.pack(side="left", padx=6, pady=6)
@@ -176,7 +176,19 @@ class Window:
         """Configure the frame for displaying image data or stats (currently placeholder)."""
         # Create a placeholder for the histogram
         self.histLabel = tb.Label(self.frameData, anchor="center", bootstyle="inverse")
-        self.histLabel.pack(fill="both", expand=True)
+        self.histLabel.pack(fill="both", expand=True, side=LEFT, padx=6)
+
+        self.frameRecipe = tb.Frame(self.frameData, bootstyle="dark")
+
+        self.buttonSaveRecipe = tb.Button(self.frameRecipe, bootstyle="light", text="Save Recipe", compound=LEFT, width=20, command=self.saveRecipeWithPrompt)
+        self.buttonLoadRecipe = tb.Button(self.frameRecipe, bootstyle="light", text="Load Recipe", compound=LEFT, width=20, command=self.loadRecipe)
+        self.buttonApplyRecipe = tb.Button(self.frameRecipe, bootstyle="light", text="Apply Recipe", compound=LEFT, width=20, command=self.applyRecipe)
+    
+        self.frameRecipe.pack(side=LEFT, padx=30)
+
+        self.buttonSaveRecipe.pack(pady=6)
+        self.buttonLoadRecipe.pack(pady=6)
+        self.buttonApplyRecipe.pack(pady=6)
 
         print("Data frame initialized.")
 
@@ -376,6 +388,9 @@ class Window:
         kernel = self.getMatrixFromUI()
         resultingImage = process.applyKernelToImage(self.image, kernel)
         self.updateImage(resultingImage)
+
+        self.tempRecipe.append({"type": "convolution", "kernel_name": self.kernelDropdownSelection.get()})
+
         print("Image processing complete.")
 
     def getHist(self):
@@ -397,11 +412,13 @@ class Window:
     def applyEqualization(self):
         resultingImage = process.applyHistEq(self.image)
         self.updateImage(resultingImage)
+        self.tempRecipe.append({"type": "hist_eq"})
 
     def applyMedianFilter(self):
         size = int(self.medianNeighborSize.get())
         resultingImage = process.applyMedianFilter(self.image, size)
         self.updateImage(resultingImage)
+        self.tempRecipe.append({"type": "median", "size": size})
 
     def updateImage(self, newImage, updateHistory=True):
         # Update displayed image
@@ -432,6 +449,44 @@ class Window:
             self.historyToggle = False
             print("Comparison toggle -> Recent")
             
+    def saveRecipeWithPrompt(self):
+        if not self.tempRecipe:
+            print("No recipe to save.")
+            return
+    
+        name = simpledialog.askstring("Save Recipe", "Enter a name for this recipe:")
+        if name:
+            access.saveRecipe(name, self.tempRecipe)
+            print(f"Recipe '{name}' saved.")
+        else:
+            print("Save canceled.")
+
+    def loadRecipe(self):
+        self.currentRecipe = access.loadRecipe()
+
+        print(f"Recipe loaded: {self.currentRecipe}")
+
+    def applyRecipe(self):
+        if self.currentRecipe:
+            for step in self.currentRecipe:
+                stepType = step.get("type")
+
+                if stepType == "hist_eq":
+                    self.applyEqualization()
+                elif stepType == "median":
+                    size = step.get("size")
+                    self.medianNeighborSize.set(str(size))
+                    self.applyMedianFilter()
+                elif stepType == "convolution":
+                    kernelName = step.get("kernel_name")
+                    if kernelName in self.kernelList:
+                        self.kernelDropdownSelection.set(kernelName)
+                        self.updateSelectedKernel()
+                        self.applyKernelToImage()
+
+                print(f"Recipe: Step {stepType} applied.")
+
+            print(f"Recipe applied to image.")
 
 if __name__ == "__main__":
     default = Window()

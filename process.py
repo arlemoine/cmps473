@@ -72,3 +72,34 @@ def applyHistEq(image):
 def applyMedianFilter(image, neighborSize=3):
     outputImage = image.filter(ImageFilter.MedianFilter(size=neighborSize))
     return outputImage
+
+def applyRecipe(image, recipeSteps):
+    """
+    Apply a sequence of image processing operations to an image.
+    
+    Parameters:
+        image (PIL.Image): Grayscale image to process.
+        recipeSteps (list of dict): Instructions for each processing step.
+    
+    Returns:
+        PIL.Image: The final processed image.
+    """
+    for step in recipeSteps:
+        step_type = step.get("type")
+
+        if step_type == "hist_eq":
+            image = applyHistEq(image)
+
+        elif step_type == "median":
+            size = step.get("size", 3)
+            image = applyMedianFilter(image, size)
+
+        elif step_type == "convolution":
+            kernel = step.get("kernel")
+            if kernel:
+                image = applyKernelToImage(image, kernel)
+
+        else:
+            print(f"Unknown recipe step type: {step_type}")
+
+    return image
